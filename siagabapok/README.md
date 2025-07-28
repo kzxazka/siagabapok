@@ -1,117 +1,123 @@
-# Siaga Bapok - Sistem Informasi Harga Bahan Pokok
+# Siaga Bapok - Sistem Informasi Harga Bahan Pokok (Versi MVC)
 
-Sistem informasi untuk memantau harga bahan pokok di Kota Bandar Lampung secara real-time dengan visualisasi data yang interaktif.
-
-## 📋 Deskripsi
-
-Siaga Bapok adalah aplikasi web yang dirancang untuk memberikan transparansi informasi harga bahan pokok kepada masyarakat, pedagang, dan pemerintah daerah. Sistem ini menampilkan data harga dari berbagai pasar tradisional di Bandar Lampung dengan fitur grafik dan tabel yang mudah dipahami.
+Sistem informasi multi-user untuk memantau harga bahan pokok di Kota Bandar Lampung dengan arsitektur MVC dan role-based access control.
 
 ## 🚀 Fitur Utama
 
-- **Dashboard Analytics**: Visualisasi data dengan grafik interaktif menggunakan Chart.js
-- **Tabel Harga**: Data harga detail per pasar dan komoditas dengan filter
-- **Top 3 Komoditas**: Menampilkan komoditas dengan kenaikan harga tertinggi
-- **Export Data**: Unduh data dalam format CSV
-- **Responsive Design**: Tampilan optimal di desktop dan mobile
-- **Real-time Update**: Data diperbarui secara berkala
+### 👥 Sistem Multi-User
+- **Admin**: Mengelola user, approve/reject data harga, oversight sistem
+- **UPTD**: Input data harga komoditas dengan validasi ketat
+- **Masyarakat**: Akses publik untuk melihat data dan grafik
 
-## 🛠️ Teknologi yang Digunakan
+### 📊 Visualisasi Data Interaktif
+- Grafik interaktif dengan filter periode (1 hari, 7 hari, 30 hari)
+- Top komoditas dengan kenaikan harga tertinggi
+- Tabel harga terbaru per pasar
+- Dashboard analytics real-time
 
-### Backend
-- **PHP Native**: Server-side scripting tanpa framework
-- **MySQL**: Database management system
-- **Apache/Nginx**: Web server (via Laragon)
+### 🔒 Keamanan & Validasi
+- Role-based authentication dengan session management
+- Validasi input harga (maksimal 5 digit)
+- Password hashing dengan bcrypt
+- CSRF protection dan input sanitization
 
-### Frontend
-- **Bootstrap 5**: CSS framework untuk responsive design
-- **Chart.js**: Library untuk visualisasi data
-- **jQuery**: JavaScript library untuk interaktivitas
-- **Bootstrap Icons**: Icon library
-
-## 📁 Struktur Direktori
+## 🏗️ Arsitektur MVC
 
 ```
 /siagabapok/
+├── /public/                    → Entry point aplikasi
+│   ├── index.php              → Halaman publik dengan grafik interaktif
+│   ├── login.php              → Halaman login multi-role
+│   ├── logout.php             → Handler logout
+│   ├── /admin/                → Dashboard admin
+│   └── /uptd/                 → Dashboard UPTD
+│       └── dashboard.php      → Form input harga + validasi
 │
-├── /assets/
+├── /src/
+│   ├── /models/               → Data layer
+│   │   ├── User.php          → Model user & authentication
+│   │   └── Price.php         → Model harga komoditas
+│   ├── /controllers/          → Business logic
+│   │   └── AuthController.php → Controller authentication
+│   └── /views/               → Presentation layer (akan dikembangkan)
+│
+├── /config/
+│   └── database.php          → Konfigurasi database & helper functions
+│
+├── /assets/                   → Static assets
 │   ├── /css/
-│   │   └── style.css          → CSS kustom
 │   ├── /js/
-│   │   └── main.js            → JavaScript utilities
-│   └── /img/                  → Logo dan gambar
+│   └── /img/
 │
-├── /includes/
-│   ├── db.php                 → Koneksi database
-│   ├── header.php             → Header dan navbar
-│   └── footer.php             → Footer dan scripts
-│
-├── /pages/
-│   ├── dashboard.php          → Dashboard analytics
-│   ├── komoditas.php          → Tabel harga komoditas
-│   └── about.php              → Informasi sistem
-│
-├── index.php                  → Halaman utama
-├── database.sql               → Struktur database dan data sample
+├── database.sql               → Schema database + data sample
 └── README.md                  → Dokumentasi
 ```
 
-## 🗄️ Struktur Database
+## 🗄️ Database Schema
 
-### Tabel `pasar`
-- `id_pasar` (Primary Key)
-- `nama_pasar`
-- `alamat`
-- `keterangan`
-- `created_at`, `updated_at`
+### Tabel `users`
+```sql
+- id (PK)
+- username (unique)
+- email (unique) 
+- password (hashed)
+- full_name
+- role (admin|uptd|masyarakat)
+- market_assigned (untuk UPTD)
+- is_active
+- created_at, updated_at
+```
 
-### Tabel `komoditas`
-- `id_komoditas` (Primary Key)
-- `nama_komoditas`
-- `satuan`
-- `kategori`
-- `keterangan`
-- `created_at`, `updated_at`
+### Tabel `prices`
+```sql
+- id (PK)
+- commodity_name
+- price (decimal 10,2)
+- market_name
+- uptd_user_id (FK)
+- status (pending|approved|rejected)
+- approved_by (FK)
+- approved_at
+- notes
+- created_at, updated_at
+```
 
-### Tabel `harga`
-- `id_harga` (Primary Key)
-- `id_pasar` (Foreign Key)
-- `id_komoditas` (Foreign Key)
-- `tanggal`
-- `harga_per_kg`
-- `stok_tersedia`
-- `keterangan`
-- `created_at`, `updated_at`
+### Tabel `user_sessions`
+```sql
+- id (PK)
+- user_id (FK)
+- session_token
+- expires_at
+- created_at
+```
 
-## 🚀 Instalasi dan Setup
+## 🚀 Instalasi & Setup
 
 ### Prasyarat
-- Laragon (atau XAMPP/WAMP)
-- PHP 7.4 atau lebih baru
-- MySQL 5.7 atau lebih baru
-- Web browser modern
+- **Laragon** (atau XAMPP/WAMP)
+- **PHP 7.4+** dengan PDO extension
+- **MySQL 5.7+**
+- **Web browser** modern
 
 ### Langkah Instalasi
 
-1. **Clone atau Download Project**
+1. **Setup Project**
    ```bash
-   # Jika menggunakan Git
-   git clone [repository-url]
-   
-   # Atau download dan extract ke folder Laragon
+   # Copy ke direktori Laragon
    # Lokasi: C:\laragon\www\siagabapok\
    ```
 
-2. **Setup Database**
+2. **Import Database**
    ```bash
-   # Buka phpMyAdmin atau MySQL client
-   # Import file database.sql
+   # Buka phpMyAdmin
+   # Import file: database.sql
+   # Atau via command line:
    mysql -u root -p < database.sql
    ```
 
 3. **Konfigurasi Database**
-   - Buka file `includes/db.php`
-   - Sesuaikan konfigurasi database:
    ```php
+   // Edit config/database.php jika perlu
    $host = 'localhost';
    $username = 'root';
    $password = '';
@@ -119,142 +125,198 @@ Siaga Bapok adalah aplikasi web yang dirancang untuk memberikan transparansi inf
    ```
 
 4. **Jalankan Aplikasi**
-   - Start Laragon
-   - Buka browser dan akses: `http://localhost/siagabapok/`
+   ```
+   # Start Laragon
+   # Akses: http://localhost/siagabapok/public/
+   ```
 
-## 📊 Data Sample
+## 👥 Login Credentials
 
-Database sudah dilengkapi dengan data sample meliputi:
-- **12 Pasar**: Pasar tradisional di Bandar Lampung
-- **25 Komoditas**: Bahan pokok utama
-- **Data Harga**: 7 hari terakhir untuk semua kombinasi pasar-komoditas
+| Role | Username | Password | Akses |
+|------|----------|----------|--------|
+| **Admin** | `admin` | `password` | Full system access |
+| **UPTD** | `uptd_tugu` | `password` | Input data Pasar Tugu |
+| **UPTD** | `uptd_bambu` | `password` | Input data Pasar Bambu Kuning |
+| **Masyarakat** | `masyarakat1` | `password` | View-only access |
 
-### Pasar yang Tercakup
-- Pasar Tugu
-- Pasar Bambu Kuning
-- Pasar Smep
-- Pasar Kangkung
-- Pasar Pasir Gintung
-- Pasar Way Halim
-- Dan lainnya...
+## 📱 Fitur per Role
 
-### Komoditas Utama
-- Beras (Premium & Medium)
-- Cabai (Merah & Rawit)
-- Bawang (Merah & Putih)
-- Minyak Goreng
-- Gula Pasir
-- Daging (Sapi & Ayam)
-- Dan lainnya...
+### 🔧 Admin
+- ✅ Dashboard dengan statistik lengkap
+- ✅ Approve/reject data harga dari UPTD
+- ✅ Manajemen user (create, edit, delete)
+- ✅ Monitor seluruh sistem
+- ✅ Export data dan laporan
 
-## 🎯 Penggunaan
+### 📝 UPTD (Petugas Pasar)
+- ✅ **Form input harga** dengan validasi ketat
+- ✅ **Validasi harga**: hanya angka, maksimal 5 digit (1-99999)
+- ✅ Riwayat input data dengan status
+- ✅ Dashboard statistik personal
+- ✅ Notifikasi approval/rejection
 
-### Halaman Utama (index.php)
-- Menampilkan hero section dengan informasi sistem
-- Top 3 komoditas dengan kenaikan harga tertinggi
-- Grafik pergerakan harga 7 hari terakhir
-- Quick stats dan call-to-action
+### 👁️ Masyarakat Umum
+- ✅ **Grafik interaktif** dengan filter periode
+- ✅ **Tren harga** 1 hari, 7 hari, 30 hari terakhir
+- ✅ Top komoditas kenaikan harga
+- ✅ Tabel harga terbaru per pasar
+- ✅ Akses tanpa login (publik)
 
-### Dashboard (pages/dashboard.php)
-- Statistik umum (jumlah komoditas, pasar, dll.)
-- Grafik line chart dengan filter komoditas
-- Bar chart rata-rata harga hari ini
-- Daftar harga tertinggi dan terendah
+## 📊 Grafik & Visualisasi
 
-### Tabel Harga (pages/komoditas.php)
-- Filter berdasarkan tanggal dan komoditas
-- Tabel data harga dengan status (Tinggi/Normal/Rendah)
-- Export ke CSV
-- Statistik ringkas
+### Chart.js Integration
+```javascript
+// Grafik dengan 3 periode filter
+- 1 Hari Terakhir: Tren harga hari ini
+- 7 Hari Terakhir: Tren mingguan  
+- 30 Hari Terakhir: Tren bulanan
 
-### Tentang (pages/about.php)
-- Informasi lengkap tentang sistem
-- Teknologi yang digunakan
-- Sumber data dan kontak
+// Fitur interaktif:
+- Hover untuk detail harga
+- Legend toggle per komoditas
+- Responsive design
+- Smooth animations
+```
 
-## 🎨 Customization
+### Data Visualization Features
+- **Line Chart**: Pergerakan harga multi-komoditas
+- **Statistics Cards**: Summary data real-time
+- **Top Trending**: Komoditas kenaikan tertinggi
+- **Latest Prices Table**: 20 data terbaru
 
-### Mengubah Warna Tema
-Edit file `includes/header.php` pada bagian CSS variables:
-```css
-:root {
-    --primary-green: #28a745;    /* Warna hijau utama */
-    --light-green: #d4edda;      /* Hijau muda */
-    --dark-green: #155724;       /* Hijau tua */
+## 🔒 Validasi & Keamanan
+
+### Input Validation
+```php
+// Validasi harga UPTD
+function validatePrice($price) {
+    if (!is_numeric($price)) return false;
+    $price = (float) $price;
+    if ($price <= 0 || $price > 99999) return false;
+    return true;
 }
 ```
 
+### Security Features
+- **Password Hashing**: bcrypt dengan cost 10
+- **Session Management**: Token-based dengan expiry
+- **Input Sanitization**: htmlspecialchars + strip_tags
+- **SQL Injection Prevention**: Prepared statements
+- **CSRF Protection**: Session tokens
+- **Role-based Access**: Middleware authentication
+
+## 🎯 Workflow Sistem
+
+### Data Input Flow
+```
+1. UPTD Login → Dashboard
+2. Input Form → Validasi (max 5 digit)
+3. Submit → Status: "Pending"
+4. Admin Review → Approve/Reject
+5. Status Update → Notifikasi UPTD
+6. Approved Data → Tampil di Public
+```
+
+### Public Access Flow
+```
+1. Visitor → index.php (tanpa login)
+2. View Grafik → Filter periode
+3. Browse Data → Tabel harga terbaru
+4. Optional Login → Role-based redirect
+```
+
+## 🔧 Customization
+
 ### Menambah Komoditas Baru
-1. Insert ke tabel `komoditas`
-2. Tambahkan data harga di tabel `harga`
-3. Update akan otomatis muncul di semua halaman
+```php
+// Edit: public/uptd/dashboard.php
+<option value="Komoditas Baru">Komoditas Baru</option>
+```
+
+### Mengubah Validasi Harga
+```php
+// Edit: config/database.php
+function validatePrice($price) {
+    // Ubah batas maksimal di sini
+    if ($price <= 0 || $price > 999999) return false; // 6 digit
+    return true;
+}
+```
 
 ### Menambah Pasar Baru
-1. Insert ke tabel `pasar`
-2. Tambahkan data harga untuk komoditas yang ada
-3. Pasar baru akan muncul di filter dan tabel
-
-## 📱 Responsive Design
-
-Aplikasi dioptimalkan untuk berbagai ukuran layar:
-- **Desktop**: Layout penuh dengan sidebar dan multiple columns
-- **Tablet**: Layout adaptif dengan collapsible navigation
-- **Mobile**: Single column layout dengan touch-friendly interface
-
-## 🔧 Maintenance
-
-### Update Data Harga
-Data harga dapat diupdate dengan:
-1. Manual via phpMyAdmin
-2. Import CSV bulk data
-3. API endpoint (jika dikembangkan)
-
-### Backup Database
-```bash
-# Backup database
-mysqldump -u root -p siagabapok_db > backup_siagabapok.sql
-
-# Restore database
-mysql -u root -p siagabapok_db < backup_siagabapok.sql
+```sql
+-- Insert UPTD user baru
+INSERT INTO users (username, email, password, full_name, role, market_assigned) 
+VALUES ('uptd_baru', 'uptd.baru@siagabapok.com', '$2y$10$...', 'UPTD Pasar Baru', 'uptd', 'Pasar Baru');
 ```
+
+## 📈 Performance & Monitoring
+
+### Database Optimization
+- **Indexes**: commodity_name, market_name, created_at, status
+- **Views**: Pre-computed queries untuk performa
+- **Connection Pooling**: PDO dengan persistent connection
+
+### Monitoring Features
+- Real-time statistics dashboard
+- User activity tracking
+- Data approval workflow
+- Error logging & handling
 
 ## 🐛 Troubleshooting
 
 ### Database Connection Error
-- Pastikan MySQL service berjalan
-- Cek konfigurasi di `includes/db.php`
-- Pastikan database `siagabapok_db` sudah dibuat
+```bash
+# Cek MySQL service
+# Verify config/database.php credentials
+# Ensure database 'siagabapok_db' exists
+```
 
-### Chart Tidak Muncul
-- Pastikan koneksi internet untuk CDN Chart.js
-- Cek console browser untuk error JavaScript
-- Pastikan data tersedia di database
+### Login Issues
+```bash
+# Clear browser cookies
+# Check user is_active status
+# Verify password hash in database
+```
 
-### Halaman Blank/Error
-- Aktifkan error reporting di PHP
-- Cek log error Apache/Nginx
-- Pastikan semua file ada dan readable
+### Chart Not Loading
+```bash
+# Check internet connection (CDN Chart.js)
+# Verify data exists in database
+# Check browser console for JS errors
+```
 
-## 🤝 Kontribusi
+## 🚀 Production Deployment
 
-Untuk berkontribusi pada project ini:
-1. Fork repository
-2. Buat feature branch
-3. Commit perubahan
-4. Push ke branch
-5. Buat Pull Request
+### Security Checklist
+- [ ] Change default passwords
+- [ ] Enable HTTPS
+- [ ] Configure proper file permissions
+- [ ] Set up regular database backups
+- [ ] Enable error logging
+- [ ] Configure firewall rules
 
-## 📄 Lisensi
+### Performance Optimization
+- [ ] Enable gzip compression
+- [ ] Set up database query caching
+- [ ] Optimize images and assets
+- [ ] Configure CDN for static files
+- [ ] Set up monitoring alerts
 
-Project ini dibuat untuk keperluan edukasi dan pengembangan sistem informasi publik.
+## 📞 Support & Maintenance
 
-## 📞 Kontak
+### Regular Tasks
+- **Daily**: Monitor pending approvals
+- **Weekly**: Database backup
+- **Monthly**: User access review
+- **Quarterly**: Security audit
 
-Untuk pertanyaan atau dukungan teknis:
-- Email: info@siagabapok.com
-- Telepon: (0721) 123456
+### Contact Information
+- **Email**: admin@siagabapok.com
+- **Phone**: (0721) 123456
+- **Support**: Senin-Jumat 08:00-17:00 WIB
 
 ---
 
-**Siaga Bapok** - Sistem Informasi Harga Bahan Pokok Kota Bandar Lampung
-Dikembangkan dengan ❤️ untuk transparansi informasi harga.
+**Siaga Bapok v2.0** - Multi-User Price Monitoring System  
+Dikembangkan dengan ❤️ untuk transparansi harga bahan pokok Kota Bandar Lampung
