@@ -227,5 +227,37 @@ class Price {
         
         return $this->db->fetchAll($sql, $params);
     }
+    
+    public function getMonthlyTrends($months = 6) {
+        $sql = "SELECT 
+                    commodity_name,
+                    DATE_FORMAT(created_at, '%Y-%m') as month,
+                    AVG(price) as avg_price,
+                    COUNT(*) as data_count
+                FROM prices 
+                WHERE status = 'approved' 
+                AND created_at >= DATE_SUB(NOW(), INTERVAL ? MONTH)
+                GROUP BY commodity_name, DATE_FORMAT(created_at, '%Y-%m')
+                ORDER BY month ASC, commodity_name";
+        
+        return $this->db->fetchAll($sql, [$months]);
+    }
+    
+    public function getSignificantPriceChanges($days = 30) {
+        $sql = "SELECT 
+                    commodity_name,
+                    AVG(CASE WHEN created_at >= DATE_SUB(NOW(), INTERVAL ? DAY) THEN price END) as current_price,
+                    AVG(CASE WHEN created_at >= DATE_SUB(NOW(), INTERVAL ? DAY) 
+                             AND created_at < DATE_SUB(NOW(), INTERVAL ? DAY) THEN price END) as previous_price
+                FROM prices 
+                WHERE status = 'approved' 
+                AND created_at >= DATE_SUB(NOW(), INTERVAL ? DAY)
+                GROUP BY commodity_name
+                HAVING current_price IS NOT NULL AND previous_price IS NOT NULL
+                AND ABS((current_price - previous_price) / previous_price * 100) >= 5
+                ORDER BY ABS((current_price - previous_price) / previous_price) DESC";
+        
+        return $this->db->fetchAll($sql, [$days, $days * 2, $days, $days * 2]);
+    }
 }
 ?>
