@@ -4,6 +4,11 @@ require_once __DIR__ . '/../src/controllers/AuthController.php';
 $auth = new AuthController();
 $auth->redirectIfLoggedIn();
 
+// Handle login form submission
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $auth->login();
+}
+
 $pageTitle = 'Login - Siaga Bapok';
 ?>
 <!DOCTYPE html>
